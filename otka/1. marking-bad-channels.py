@@ -13,8 +13,7 @@ import pickle
 
 data_dir = '/Users/yeganeh/Documents/Raw Files/PLB_HYP_OTKA/Live Sessions'
 docs_dir = '/Users/yeganeh/Codes/otka-preprocessing/docs'
-elig_par = pd.read_excel(f'{docs_dir}/eeg_behavioral_bids_idsmap.xlsx', header=1)
-elig_par.set_index('eeg_id', inplace=True)
+elig_par = pd.read_excel(f'{docs_dir}/ids_map.xlsx', header=1, index_col='eeg_id')
 chunck2 = [i for i in elig_par.index if elig_par.loc[i,'bids_id']== '[]']
 
 #%%
