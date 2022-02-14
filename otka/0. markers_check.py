@@ -1,5 +1,8 @@
 #%%
-# This document is for checking the markers in the EEG files
+# This code groups EEG data based on the condition of their markers.
+# This is a necessary step before bidsifying.
+
+# Setup
 from mne.utils import docs
 import numpy as np
 import mne
@@ -21,11 +24,13 @@ total_ids_map = pd.read_csv(fname)
 total_ids_map.rename(columns={'Unnamed: 0':'eeg_ids'}, inplace=True)
 total_ids_map.set_index('eeg_ids', inplace=True, drop=True)
 
-# ---------------------- group1: data that are already analyzed in the first round of analysis
+# ---------------------- group1: data that are already analyzed in the first round
 chunck1 = pd.read_csv(op.join(docs_dir,'elig_par'))
 chunck1 = chunck1['0'].tolist()
 chunck1 = [i for i in chunck1 if i.isdigit()]
-imp_trg = [2152714, 2160311, 215711, 2152014, 2160314, 21052511, 2131811, 2131814] # sessions that trigger has not worked normally (the last one does not have only Stimulus 2, the forth only contains the triggers for the first trial)
+# sessions that trigger has not worked normally (the last one does not have only Stimulus 2,
+# the forth only contains the triggers for the first trial)
+imp_trg = [2152714, 2160311, 215711, 2152014, 2160314, 21052511, 2131811, 2131814] 
 [chunck1.remove(str(i)) for i in imp_trg]
 
 #%%
