@@ -1,4 +1,5 @@
-
+# This code visualize the eeg time series and create a dictionary of bad channels
+# (the quality of channels will be examined later in the preprocessing as well) 
 #%%
 import numpy as np
 import mne
@@ -17,8 +18,12 @@ elig_par = pd.read_excel(f'{docs_dir}/ids_map.xlsx', header=1, index_col='eeg_id
 chunck2 = [i for i in elig_par.index if elig_par.loc[i,'bids_id']== '[]']
 
 #%%
-subject_ids = ['214911confusion']
+subject_ids = ['2133014_poathynosis']
 bads = {}
+
+# n_sub = '51'
+# raw_name = f'sub-{n_sub}_ses-01_task-baseline1_eeg.vhdr'
+# data_dir = f'/Users/yeganeh/Codes/otka-preprocessing/data/Main-study/sub-{n_sub}/ses-01/eeg/{raw_name}'
 
 for subject_id in subject_ids:
     fname = op.join(data_dir,'{}.vhdr'.format(subject_id))
