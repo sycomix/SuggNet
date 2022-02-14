@@ -1,4 +1,14 @@
 data/
 .DS_Store
 *.pyc
-temporary/
+temp/
+__pycache__/
+behavioral_data/
+configs/
+*.bvef
+
+otka/4.1. psd.py
+notebooks/functional_connectivity.ipynb
+notebooks/feature_importance.ipynb
+notebooks/bv2bids_ch5.ipynb
+4.1. psd.ipynb
