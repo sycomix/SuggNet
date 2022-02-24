@@ -10,6 +10,7 @@ from pathlib import Path
 from pyprep.prep_pipeline import PrepPipeline
 from scipy.stats import median_abs_deviation
 
+
 # transalted from Vislab's MATLAB code to python
 def dispersion_with_mean(matrix):
     """
@@ -29,15 +30,16 @@ def dispersion_with_mean(matrix):
     """
     mean_amp = matrix.mean(1)
     matrix_normalized = matrix / mean_amp
-    stdFromMad = 1.4826 * median_abs_deviation(matrix_normalized,1)
-    dispersion = stdFromMad / np.median(matrix_normalized); 
+    stdFromMad = 1.4826 * median_abs_deviation(matrix_normalized, 1)
+    dispersion = stdFromMad / np.median(matrix_normalized)
 
     return dispersion
+
 
 def _make_amplitude_matrix(ampVectors):
     """
     ampVectors : list of np.array
-    
+
     """
     # inital zeros array
     amplitude_matrix = [
@@ -48,8 +50,9 @@ def _make_amplitude_matrix(ampVectors):
     amplitude_matrix = np.delete(amplitude_matrix, 0, axis=0)
     return amplitude_matrix
 
+
 def _amplitude_vector(raw):
     # Calculate robust std from MAD
-    # if type(raw) != 
-    ampVector = 1.4826 * median_abs_deviation(raw.get_data(),1)
+    # if type(raw) !=
+    ampVector = 1.4826 * median_abs_deviation(raw.get_data(), 1)
     return ampVector
