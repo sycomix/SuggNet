@@ -109,7 +109,7 @@ def preprocessing(path, subjects, task, resampling_frq=None, ref_chs=None,
 
         if autoreject == 'local':
             ar = AutoReject()
-            epochs_clean = ar.fit_transform(epoch)
+            epochs_clean = ar.fit_transform(epoch)  # noqa
 
         # epoch to continous data and amplitude vector after epoching
         continuous_data = _epoch_to_continuous(epoch)
@@ -133,5 +133,11 @@ def preprocessing(path, subjects, task, resampling_frq=None, ref_chs=None,
 
 def _epoch_to_continuous(epoch):
     array = epoch.get_data()
+    shape = array.shape
+    init = np.zeros(shape[1:])
+    for i in range(shape[0]):
+        init = np.hstack((init,array[i]))
 
-    return array
+    init = np.delete(init, np.s_[:shape[2]], 1)
+
+    return init
