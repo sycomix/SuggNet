@@ -10,7 +10,6 @@ import numpy as np
 from autoreject import AutoReject
 from autoreject import get_rejection_threshold
 import xarray as xr
-import ast
 from calculateDispersion import amplitude_vector, dispersion_with_mean
 import copy
 
@@ -52,8 +51,9 @@ def preprocessing(path, subjects, task, resampling_frq=None, ref_chs=None,
     ds = xr.open_dataset(path)
     # create mne object from dataset
     # info object
-    ch_names = list(ds.coords['channels'].values)
-    sfreq = ds.attrs['sfreq']
+    ch_names = list(ds.coords['channel'].values)
+    # TODO sfreq = ds.attrs['sfreq']
+    sfreq = 1000
     info = mne.create_info(ch_names=ch_names, sfreq=sfreq, ch_types='eeg')
 
     # initialize empty containers for storing amplitude vectors, rejection threshold, etc.
@@ -64,8 +64,8 @@ def preprocessing(path, subjects, task, resampling_frq=None, ref_chs=None,
     for i, sub in enumerate(subjects):
         # mne object
         data = ds[task][i].to_numpy()
-        bads = ast.literal_eval(ds.attrs['bad_channels'][i])
-        info['bads'] = bads
+        # TODO bads = ast.literal_eval(ds.attrs['bad_channels'][i])
+        # info['bads'] = bads
         raw = mne.io.RawArray(data, info)
         raw.set_channel_types({
             'ECG': 'ecg',
@@ -96,56 +96,58 @@ def preprocessing(path, subjects, task, resampling_frq=None, ref_chs=None,
             ampVectors.append(ampVector)
 
         # epoching
-        new_annot = mne.Annotations(
-            onset=[0],
-            duration=[int(len(raw)/sfreq)],
-            description=[task])
-        raw.set_annotations(new_annot)
-        events, event_dict = mne.events_from_annotations(raw, chunk_duration=1)
-        epoch = mne.Epochs(raw, events, event_dict, baseline=None, preload=True)
+        epochs = mne.make_fixed_length_epochs(raw, duration=1, preload=True)
+        # note: for creating epochs with mne.epochs, tmin and tmax should be determined!
 
-        # autoreject (TODO in mne-bids-pipeline they have this step after ICA)
-        if autoreject == 'global':
-            reject = get_rejection_threshold(epoch, decim=2)
-            rejects[sub] = reject
-            epoch.drop_bad(reject=reject)
-
-        if autoreject == 'local':
-            ar = AutoReject()
-            epochs_clean = ar.fit_transform(epoch)  # noqa
-
-        # epoch to continous data and calculate amplitude vector after epoching
-        continuous_data = _epoch_to_continuous(epoch)
-        ampVector = amplitude_vector(continuous_data)
-        ampVectors_after_autoreject.append(ampVector)
-
-        # TODO ICA
+        # TODO ICA (This section finds blink components automatically and removes them, it is possible that there is no
+        # blink component for some participants) (can make a copy of raw, highpass filter it in 1 hz, calculate ICA,
+        # and then remove the compoments from the original raw (the same for autoreject!))
+        # TODO log everything! the ccomponent it has removed, plots and all the reports, we should become aware of
+        # decision it made automaticly.
 
         # TODO amplitude vector after ica
 
+        # autoreject
+        if autoreject == 'global':
+            reject = get_rejection_threshold(epochs, decim=2)
+            rejects[sub] = reject
+            epochs_clean = epochs.copy().drop_bad(reject=reject)
+            del epochs
+
+        if autoreject == 'local':
+            ar = AutoReject()
+            epochs_clean = ar.fit_transform(epochs)
+
+        # epochs to continous data and calculate amplitude vector after epoching
+        continuous_data = _epochs_to_continuous(epochs)
+        ampVector = amplitude_vector(continuous_data)
+        ampVectors_after_autoreject.append(ampVector)
+
         # save clean epochs
-        epoch.save(f'data/clean_data/sub-{sub}_ses-01_task-{task}_epo.fif')
+        epochs_clean.save(f'data/clean_data/sub-{sub}_ses-01_task-{task}_epo.fif')
 
     # calculate dispersion vector from each stage and save the plot
     pos = _make_montage()
-    dispersion_with_mean(ampVector, pos)
+    dispersion_with_mean(ampVectors, pos)
     del ampVectors
-    dispersion_with_mean(ampVectors_after_autoreject, pos)
-    del ampVectors_after_autoreject
-    
+
+    if autoreject:
+        dispersion_with_mean(ampVectors_after_autoreject, pos)
+        del ampVectors_after_autoreject
+
     # TODO save reject threshold in csv format
 
     # clean dataset
-    # read epoch from file
-    mne.read_epochs()
+    # read epochss from file
+    # mne.read_epochs()
 
     # epoch to continuous
 
-    # use utility function to_xarray to create xarray dataset
+    # use to_xarray to create xarray dataset
 
 
-def _epoch_to_continuous(epoch):
-    array = epoch.get_data()
+def _epochs_to_continuous(epochs):
+    array = epochs.get_data()
     shape = array.shape
     init = np.zeros(shape[1:])
     for i in range(shape[0]):
