@@ -5,17 +5,19 @@ Preprocessing
 """
 
 # imports
-import mne
 import numpy as np
+import copy
+import ast  # noqa
+import xarray as xr
+import mne
 from autoreject import AutoReject
 from autoreject import get_rejection_threshold
-import xarray as xr
 from calculateDispersion import amplitude_vector, dispersion_with_mean
-import copy
+from run_ica import run_ica
 
 
 def preprocessing(path, subjects, task, resampling_frq=None, ref_chs=None,
-                  filter_bounds=None, autoreject=None, qc=True, n_job=1):
+                  filter_bounds=None, ica=None, autoreject=None, qc=True, n_job=1):
 
     """
     Parameters
@@ -27,6 +29,10 @@ def preprocessing(path, subjects, task, resampling_frq=None, ref_chs=None,
 
     task : str
 
+    template : string
+        path to a instance of mne.preprocessing.ica. this ica and its eog and ecg components
+        will be used as a template for biophysiological ICs detection
+
     resampling_frq : int
         resampling frequency
 
@@ -35,6 +41,8 @@ def preprocessing(path, subjects, task, resampling_frq=None, ref_chs=None,
     filter_bounds : tuple of float
         first item in tuple is the lower pass-band edge and second item is the upper
         pass-band edge
+    
+    ica : boolean
 
     autoreject : str
         can be 'global' or 'local'. if none, it won't calculate rejection threshold to
@@ -55,9 +63,11 @@ def preprocessing(path, subjects, task, resampling_frq=None, ref_chs=None,
     # TODO sfreq = ds.attrs['sfreq']
     sfreq = 1000
     info = mne.create_info(ch_names=ch_names, sfreq=sfreq, ch_types='eeg')
+    pos = _make_montage()
 
     # initialize empty containers for storing amplitude vectors, rejection threshold, etc.
     ampVectors = []
+    ampVectors_after_ica = []
     ampVectors_after_autoreject = []
     rejects = {}
 
@@ -72,6 +82,8 @@ def preprocessing(path, subjects, task, resampling_frq=None, ref_chs=None,
             'EOG1': 'eog',
             'EOG2': 'eog'
             })
+        # set channels positions
+        raw.set_montage(pos)
 
         # resampling
         if resampling_frq is not None:
@@ -95,53 +107,61 @@ def preprocessing(path, subjects, task, resampling_frq=None, ref_chs=None,
             ampVector = amplitude_vector(raw)
             ampVectors.append(ampVector)
 
-        # epoching
+        # apply ICA, remove eog components based on the template, and save the report
+        if ica:
+            raw_ica = run_ica(raw)
+            del raw
+
+        # calculate amplidute vector after ica
+        if qc:
+            ampVector = amplitude_vector(raw_ica)
+            ampVectors_after_ica.append(ampVector)
+
+        # epoching (note: for creating epochs with mne.epochs, tmin and tmax should be specified!)
         epochs = mne.make_fixed_length_epochs(raw, duration=1, preload=True)
-        # note: for creating epochs with mne.epochs, tmin and tmax should be determined!
-
-        # TODO ICA (This section finds blink components automatically and removes them, it is possible that there is no
-        # blink component for some participants) (can make a copy of raw, highpass filter it in 1 hz, calculate ICA,
-        # and then remove the compoments from the original raw (the same for autoreject!))
-        # TODO log everything! the ccomponent it has removed, plots and all the reports, we should become aware of
-        # decision it made automaticly.
-
-        # TODO amplitude vector after ica
 
         # autoreject
         if autoreject == 'global':
             reject = get_rejection_threshold(epochs, decim=2)
             rejects[sub] = reject
-            epochs_clean = epochs.copy().drop_bad(reject=reject)
-            del epochs
+            epochs.drop_bad(reject=reject)
+            reject_log = np.array([
+                i for i in range(len(epochs.drop_log)) if epochs.drop_log[i] != ()
+                ])
+            np.save(f'data/rejectlog/{sub}-{task}.npy', reject_log)
 
         if autoreject == 'local':
             ar = AutoReject()
-            epochs_clean = ar.fit_transform(epochs)
+            epochs = ar.fit_transform(epochs)  # TODO check if this is ok to save the
+            # fit_transformed data to the save object
 
         # epochs to continous data and calculate amplitude vector after epoching
-        continuous_data = _epochs_to_continuous(epochs)
-        ampVector = amplitude_vector(continuous_data)
-        ampVectors_after_autoreject.append(ampVector)
+        if qc:
+            continuous_data = _epochs_to_continuous(epochs)
+            ampVector = amplitude_vector(continuous_data)
+            ampVectors_after_autoreject.append(ampVector)
 
         # save clean epochs
-        epochs_clean.save(f'data/clean_data/sub-{sub}_ses-01_task-{task}_epo.fif')
+        epochs.save(f'data/clean_data/sub-{sub}_ses-01_task-{task}_epo.fif')
 
     # calculate dispersion vector from each stage and save the plot
-    pos = _make_montage()
-    dispersion_with_mean(ampVectors, pos)
+    dispersion_with_mean(ampVectors, pos, fname='docs/dv.npy', save=True)
     del ampVectors
 
-    if autoreject:
-        dispersion_with_mean(ampVectors_after_autoreject, pos)
-        del ampVectors_after_autoreject
+    if ica and qc:
+        dispersion_with_mean(ampVectors_after_ica, pos, fname='docs/dv_after_ica.npy', save=True)
+        del ampVectors_after_ica
 
-    # TODO save reject threshold in csv format
+    if autoreject and qc:
+        dispersion_with_mean(ampVectors_after_autoreject, pos, fname='docs/dv_after_autoreject.npy', save=True)
+        del ampVectors_after_autoreject
 
     # clean dataset
     # read epochss from file
     # mne.read_epochs()
 
-    # epoch to continuous
+    # epoch to continuous (maybe I won't do this, depending on how I calculate psd, bacuase near the rejected epochs
+    # I would see edge effects and if I retuen this to continuos data I cannot track them!)
 
     # use to_xarray to create xarray dataset
 
