@@ -9,7 +9,7 @@ from scipy.stats import median_abs_deviation
 
 
 # transalted from Vislab's MATLAB code to python
-def dispersion_with_mean(ampVectors, pos, visualize=True):
+def dispersion_with_mean(ampVectors, pos, fname, visualize=True, save=True):
     """
     calculate dispersion vector [1]
     this function use mean for normalization
@@ -36,6 +36,9 @@ def dispersion_with_mean(ampVectors, pos, visualize=True):
 
     if visualize:
         _visualize_dispersion(dispersion, pos)
+    
+    if save:
+        np.save(fname, dispersion)
 
     return dispersion
 
