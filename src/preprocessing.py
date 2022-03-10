@@ -12,7 +12,7 @@ import xarray as xr
 import mne
 from autoreject import AutoReject
 from autoreject import get_rejection_threshold
-from calculateDispersion import amplitude_vector, dispersion_with_mean
+from calculateDispersion import amplitude_vector, dispersion_report
 from run_ica import run_ica
 
 
@@ -22,9 +22,8 @@ def preprocessing(path,
                   resampling_frq=None,
                   ref_chs=None,
                   filter_bounds=None,
-                  ica=None,
-                  autoreject=None,
-                  qc=True,
+                  ica_n_components=None,
+                  autoreject='global',
                   n_job=-1):
 
     """
@@ -111,18 +110,15 @@ def preprocessing(path,
                 )
 
         # create amplitude vector before epoching and running autoreject
-        if qc:
-            ampVector = amplitude_vector(raw)
-            ampVectors.append(ampVector)
+        ampVector = amplitude_vector(raw)
+        ampVectors.append(ampVector)
 
         # apply ICA, remove eog and ecg ICs using templates, and save the report
-        if ica:
-            raw = run_ica(raw, sub)
+        raw = run_ica(raw, sub, n_components=ica_n_components)
 
         # calculate amplidute vector after ica
-        if qc:
-            ampVector = amplitude_vector(raw)
-            ampVectors_after_ica.append(ampVector)
+        ampVector = amplitude_vector(raw)
+        ampVectors_after_ica.append(ampVector)
 
         # epoching (note: for creating epochs with mne.epochs, tmin and tmax should be specified!)
         epochs = mne.make_fixed_length_epochs(raw, duration=1, preload=True)
@@ -144,7 +140,6 @@ def preprocessing(path,
             # fit_transformed data to the save object
 
         # epochs to continous data and calculate amplitude vector after epoching
-        if qc:
             continuous_data = _epochs_to_continuous(epochs)
             ampVector = amplitude_vector(continuous_data)
             ampVectors_after_autoreject.append(ampVector)
@@ -152,22 +147,18 @@ def preprocessing(path,
         # save clean epochs
         epochs.save(f'data/clean_data/sub-{sub}_ses-01_task-{task}_epo.fif')
 
-    # calculate dispersion vector from each stage and save the plot
-    dispersion_with_mean(ampVectors, pos, fname='docs/dv.npy', save=True)
-    del ampVectors
+    # calculate dispersion vector from each stage and save a report
+    # first concatenate DVs from each stage and then input it into the custom function
+    ampVectors_collection = [ampVectors, ampVectors_after_ica, ampVectors_after_autoreject]
+    # calculate dispersion with mean for each DV in the collection, make a report, and save DVs
+    dispersion_report(ampVectors_collection, pos, 'docs/dispersionVectors.npy', save=True)
 
-    if ica and qc:
-        dispersion_with_mean(ampVectors_after_ica, pos, fname='docs/dv_after_ica.npy', save=True)
-        del ampVectors_after_ica
-
-    if autoreject and qc:
-        dispersion_with_mean(ampVectors_after_autoreject, pos, fname='docs/dv_after_autoreject.npy', save=True)
-        del ampVectors_after_autoreject
+    # clean up
+    del ampVectors_collection, ampVectors, ampVectors_after_ica, ampVectors_after_autoreject
 
     # clean dataset
     # read epochss from file
     # mne.read_epochs()
-
     # epoch to continuous (maybe I won't do this, depending on how I calculate psd, bacuase near the rejected epochs
     # I would see edge effects and if I retuen this to continuos data I cannot track them!)
 

@@ -9,7 +9,7 @@ from scipy.stats import median_abs_deviation
 
 
 # transalted from Vislab's MATLAB code to python
-def dispersion_with_mean(ampVectors, pos, fname, visualize=True, save=True):
+def dispersion_with_mean(ampVectors):
     """
     calculate dispersion vector [1]
     this function use mean for normalization
@@ -34,13 +34,37 @@ def dispersion_with_mean(ampVectors, pos, fname, visualize=True, save=True):
     stdFromMad = 1.4826 * median_abs_deviation(matrix_normalized, 1)
     dispersion = stdFromMad / np.median(matrix_normalized)
 
-    if visualize:
-        _visualize_dispersion(dispersion, pos)
-    
-    if save:
-        np.save(fname, dispersion)
-
     return dispersion
+
+
+def dispersion_report(ampVectors_collection, pos, fname, save=True):
+    """
+    calculate dispersion with mean for a collecation of amplitude matrix and create a
+    report containing topomaps
+    """
+    dispersions = []
+    ranges = range(len(ampVectors_collection))
+    [dispersions.append(dispersion_with_mean(ampVectors_collection[i])) for i in ranges]
+
+    figs = []
+    for i in ranges:
+        fig, _ = plt.subplots()
+        _visualize_dispersion(dispersions[i], pos)
+        figs.append(fig)
+
+    report = mne.Report(title='QC: Dispersion Vectors')
+    report.add_figure(
+        fig=figs,
+        title='topomap of Dispersion vectors',
+        caption=['DV before ICA and Autoreject',
+                 'DV after ICA and before Autoreject',
+                 'DV after ICA and Autoreject'],
+        image_format='PNG'
+    )
+    report.save('dispersionVector_report.html')
+
+    if save:
+        np.save(fname, np.array(ampVectors_collection))
 
 
 def amplitude_vector(raw):
@@ -60,5 +84,6 @@ def _visualize_dispersion(dispVector, pos):
     # remove position of EOG1 and EOG2 channels that are not included in the dispersion vector compitation
     ch_pos = np.delete(ch_pos, [pos.ch_names.index(i) for i in ['EOG1', 'EOG2']], 0)
 
-    mne.viz.plot_topomap(dispVector, ch_pos)
-    plt.save()
+    ax = mne.viz.plot_topomap(dispVector, ch_pos)
+
+    return ax
