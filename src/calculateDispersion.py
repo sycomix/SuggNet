@@ -9,7 +9,7 @@ from scipy.stats import median_abs_deviation
 
 
 # transalted from Vislab's MATLAB code to python
-def dispersion_with_mean(ampVectors):
+def dispersion_with_mean(ampVectors, normalization=True):
     """
     calculate dispersion vector [1]
     this function use mean for normalization
@@ -29,22 +29,27 @@ def dispersion_with_mean(ampVectors):
     """
 
     amplitude_matrix = np.array(ampVectors).T
-    mean_recording = amplitude_matrix.mean(0)
-    matrix_normalized = amplitude_matrix / mean_recording
-    stdFromMad = 1.4826 * median_abs_deviation(matrix_normalized, 1)
-    dispersion = stdFromMad / np.median(matrix_normalized)
+    if normalization:
+        mean_recording = amplitude_matrix.mean(0)
+        amplitude_matrix = np.divide(amplitude_matrix, mean_recording)
+    stdFromMad = 1.4826 * median_abs_deviation(amplitude_matrix, 1)
+    dispersion = stdFromMad / np.median(amplitude_matrix)
 
     return dispersion
 
 
-def dispersion_report(ampVectors_collection, pos, fname, save=True):
+def dispersion_report(ampVectors_collection,
+                      pos,
+                      fname,
+                      save=True,
+                      normalization=True):
     """
     calculate dispersion with mean for a collecation of amplitude matrix and create a
     report containing topomaps
     """
     dispersions = []
     ranges = range(len(ampVectors_collection))
-    [dispersions.append(dispersion_with_mean(ampVectors_collection[i])) for i in ranges]
+    [dispersions.append(dispersion_with_mean(ampVectors_collection[i], normalization)) for i in ranges]
 
     figs = []
     for i in ranges:
@@ -59,7 +64,6 @@ def dispersion_report(ampVectors_collection, pos, fname, save=True):
         caption=['DV before ICA and Autoreject',
                  'DV after ICA and before Autoreject',
                  'DV after ICA and Autoreject'],
-        image_format='PNG'
     )
     report.save('dispersionVector_report.html', overwrite=True)
 
@@ -74,7 +78,7 @@ def amplitude_vector(raw, ch_names, thisIsNotNumpy=True):
     ampVector = 1.4826 * median_abs_deviation(raw, 1)
     # delete ecg and eog channels as they are not of interest but will impact dispersion vector calculation
     if thisIsNotNumpy:  # TODO This line can potentially become a source of confusion and should be changed!!
-        # for now, we know  that when raw is a np.array it's actually the output of epoched data 
+        # for now, we know  that when raw is a np.array it's actually the output of epoched data
         # that became continuous with a costum function after autoreject for which we had already
         # picked only eeg channels. Other than that there is no relation between being a numpy array and this line!!
         ampVector = np.delete(ampVector, [ch_names.index(i) for i in ['EOG1', 'EOG2', 'ECG']])

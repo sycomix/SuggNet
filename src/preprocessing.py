@@ -6,6 +6,7 @@ Preprocessing
 
 # imports
 import numpy as np
+import pandas as pd
 import copy
 import ast  # noqa
 import xarray as xr
@@ -122,10 +123,10 @@ def preprocessing(path,
 
         # epoching (note: for creating epochs with mne.epochs, tmin and tmax should be specified!)
         epochs = mne.make_fixed_length_epochs(raw, duration=1, preload=True)
+        del raw
 
         # autoreject
         if autoreject == 'global':
-            epochs.pick_types(eeg=True)  # TODO how to restore eog and ecg channels when saving data
             reject = get_rejection_threshold(epochs)
             rejects[sub] = reject
             epochs.drop_bad(reject=reject)
@@ -135,7 +136,7 @@ def preprocessing(path,
             np.save(f'data/rejectlog/{sub}-{task}.npy', reject_log)
 
         if autoreject == 'local':
-            ar = AutoReject()
+            ar = AutoReject()  # TODO consider setting random state
             epochs = ar.fit_transform(epochs)  # TODO check if this is ok to save the
             # fit_transformed data to the save object
 
@@ -150,10 +151,22 @@ def preprocessing(path,
     # calculate dispersion vector from each stage and save a report
     # first concatenate DVs from each stage and then input it into the custom function
     ampVectors_collection = [ampVectors, ampVectors_after_ica, ampVectors_after_autoreject]
-    # calculate dispersion with mean for each DV in the collection, make a report, and save DVs
-    dispersion_report(ampVectors_collection, pos, 'docs/dispersionVectors.npy', save=True)
+    # calculate unnormalized and normalized DVs with mean for each DV in the collection,
+    # make and save a report
+    dispersion_report(ampVectors_collection,
+                      pos,
+                      'docs/dispersionVectors.npy',
+                      save=True,
+                      normalization=False)
+    dispersion_report(ampVectors_collection,
+                      pos,
+                      'docs/dispersionVectors_normalized.npy',
+                      save=True,
+                      normalization=True)
 
-    # clean up
+    # cleans-up and savings
+    df = pd.DataFrame.from_dict(rejects)
+    df.to_csv('data/rejectlog/rejection_thresholds.csv')
     del ampVectors_collection, ampVectors, ampVectors_after_ica, ampVectors_after_autoreject
 
     # clean dataset
