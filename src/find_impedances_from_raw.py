@@ -8,14 +8,14 @@ ids_map = ids_map.loc[:2132614].drop_duplicates('bids_id')
 subject_ids = ids_map.reset_index().eeg_id
 bids = ids_map.reset_index().bids_id
 
-violated_thresh = {}
+high_imp = {}
 for sub, bid in zip(subject_ids, bids):
     raw = read_raw_brainvision(f'data/Live Sessions/{sub}.vhdr', misc=['ECG'])
     ch_names = raw.ch_names
-    violated_thresh[bid] = [dict({ch_nam: raw.impedances[ch_nam]['imp']})
+    high_imp[bid] = [dict({ch_nam: raw.impedances[ch_nam]['imp']})
                             for ch_nam in ch_names
                             if raw.impedances[ch_nam]['imp'] >= 11]
 
 
-df = pd.DataFrame.from_dict(violated_thresh, orient='index')
-df.to_csv('docs/violated_thresh.csv')
+df = pd.DataFrame.from_dict(high_imp, orient='index')
+df.to_csv('docs/high_imp.csv')

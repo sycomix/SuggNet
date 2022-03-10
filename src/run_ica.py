@@ -11,7 +11,8 @@ from mne import Report
 def run_ica(raw,
             sub,
             n_components=None,
-            random_state=42):
+            random_state=42,
+            show_plot=False):
 
     # open templates
     eog_ica, eog_3rd_ica, ecg_ica, eog_inds, ecg_inds = _open_templates()
@@ -34,12 +35,12 @@ def run_ica(raw,
     eog_epochs = mne.preprocessing.create_eog_epochs(raw=raw)
     _, eog_scores = ica.find_bads_eog(raw, ch_name=['EOG1', 'EOG2', 'Fpz'])
     # we know that there is two components in the eog template so:
-    [corrmap(icas_eog, template=(0, eog_inds[i]), threshold=0.9, label='blink', plot=False)
+    [corrmap(icas_eog, template=(0, eog_inds[i]), threshold=0.9, label='blink', plot=show_plot)
      for i in range(2)]
     # detecting oculomotor activity using third compenents
     icas_eog.append(eog_3rd_ica)
     eog_inds.append(7)  # use components 7 from 3rd_ica as a template:
-    corrmap(icas_eog, template=(2, eog_inds[2]), threshold=0.85, label='oculomotor', plot=False)
+    corrmap(icas_eog, template=(2, eog_inds[2]), threshold=0.85, label='oculomotor', plot=show_plot)
 
     if 'blink' in ica.labels_.keys():
         eog_comps = ica.labels_['blink']
@@ -49,7 +50,7 @@ def run_ica(raw,
     # detect ecg components
     ecg_epochs = mne.preprocessing.create_ecg_epochs(raw=raw)
     _, ecg_scores = ica.find_bads_ecg(raw, ch_name='ECG')
-    corrmap(icas_ecg, template=(0, ecg_inds[0]), threshold=0.85, label='heartbeat', plot=False)
+    corrmap(icas_ecg, template=(0, ecg_inds[0]), threshold=0.85, label='heartbeat', plot=show_plot)
     if 'heartbeat' in ica.labels_.keys():
         ecg_comps = ica.labels_['heartbeat']
     else:

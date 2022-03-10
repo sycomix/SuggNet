@@ -61,18 +61,23 @@ def dispersion_report(ampVectors_collection, pos, fname, save=True):
                  'DV after ICA and Autoreject'],
         image_format='PNG'
     )
-    report.save('dispersionVector_report.html')
+    report.save('dispersionVector_report.html', overwrite=True)
 
     if save:
         np.save(fname, np.array(ampVectors_collection))
 
 
-def amplitude_vector(raw):
+def amplitude_vector(raw, ch_names, thisIsNotNumpy=True):
     # Calculate robust std from MAD
-    array = raw.get_data()
-    ampVector = 1.4826 * median_abs_deviation(array, 1)
+    if thisIsNotNumpy:
+        raw = raw.get_data()
+    ampVector = 1.4826 * median_abs_deviation(raw, 1)
     # delete ecg and eog channels as they are not of interest but will impact dispersion vector calculation
-    ampVector = np.delete(ampVector, [raw.ch_names.index(i) for i in ['EOG1', 'EOG2', 'ECG']])
+    if thisIsNotNumpy:  # TODO This line can potentially become a source of confusion and should be changed!!
+        # for now, we know  that when raw is a np.array it's actually the output of epoched data 
+        # that became continuous with a costum function after autoreject for which we had already
+        # picked only eeg channels. Other than that there is no relation between being a numpy array and this line!!
+        ampVector = np.delete(ampVector, [ch_names.index(i) for i in ['EOG1', 'EOG2', 'ECG']])
 
     return ampVector
 

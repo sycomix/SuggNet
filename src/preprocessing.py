@@ -110,14 +110,14 @@ def preprocessing(path,
                 )
 
         # create amplitude vector before epoching and running autoreject
-        ampVector = amplitude_vector(raw)
+        ampVector = amplitude_vector(raw, ch_names=ch_names)
         ampVectors.append(ampVector)
 
         # apply ICA, remove eog and ecg ICs using templates, and save the report
         raw = run_ica(raw, sub, n_components=ica_n_components)
 
         # calculate amplidute vector after ica
-        ampVector = amplitude_vector(raw)
+        ampVector = amplitude_vector(raw, ch_names=ch_names)
         ampVectors_after_ica.append(ampVector)
 
         # epoching (note: for creating epochs with mne.epochs, tmin and tmax should be specified!)
@@ -140,12 +140,12 @@ def preprocessing(path,
             # fit_transformed data to the save object
 
         # epochs to continous data and calculate amplitude vector after epoching
-            continuous_data = _epochs_to_continuous(epochs)
-            ampVector = amplitude_vector(continuous_data)
-            ampVectors_after_autoreject.append(ampVector)
+        continuous_data = _epochs_to_continuous(epochs)
+        ampVector = amplitude_vector(continuous_data, ch_names=ch_names, thisIsNotNumpy=False)
+        ampVectors_after_autoreject.append(ampVector)
 
         # save clean epochs
-        epochs.save(f'data/clean_data/sub-{sub}_ses-01_task-{task}_epo.fif')
+        epochs.save(f'data/clean_data/sub-{sub}_ses-01_task-{task}_epo.fif', overwrite=True)
 
     # calculate dispersion vector from each stage and save a report
     # first concatenate DVs from each stage and then input it into the custom function
