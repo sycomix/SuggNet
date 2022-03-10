@@ -16,8 +16,16 @@ from calculateDispersion import amplitude_vector, dispersion_with_mean
 from run_ica import run_ica
 
 
-def preprocessing(path, subjects, task, resampling_frq=None, ref_chs=None,
-                  filter_bounds=None, ica=None, autoreject=None, qc=True, n_job=1):
+def preprocessing(path,
+                  subjects,
+                  task,
+                  resampling_frq=None,
+                  ref_chs=None,
+                  filter_bounds=None,
+                  ica=None,
+                  autoreject=None,
+                  qc=True,
+                  n_job=-1):
 
     """
     Parameters
@@ -29,7 +37,7 @@ def preprocessing(path, subjects, task, resampling_frq=None, ref_chs=None,
 
     task : str
 
-    template : string
+    fname_ica_template : string
         path to a instance of mne.preprocessing.ica. this ica and its eog and ecg components
         will be used as a template for biophysiological ICs detection
 
@@ -41,7 +49,7 @@ def preprocessing(path, subjects, task, resampling_frq=None, ref_chs=None,
     filter_bounds : tuple of float
         first item in tuple is the lower pass-band edge and second item is the upper
         pass-band edge
-    
+
     ica : boolean
 
     autoreject : str
@@ -107,14 +115,13 @@ def preprocessing(path, subjects, task, resampling_frq=None, ref_chs=None,
             ampVector = amplitude_vector(raw)
             ampVectors.append(ampVector)
 
-        # apply ICA, remove eog components based on the template, and save the report
+        # apply ICA, remove eog and ecg ICs using templates, and save the report
         if ica:
-            raw_ica = run_ica(raw)
-            del raw
+            raw = run_ica(raw, sub)
 
         # calculate amplidute vector after ica
         if qc:
-            ampVector = amplitude_vector(raw_ica)
+            ampVector = amplitude_vector(raw)
             ampVectors_after_ica.append(ampVector)
 
         # epoching (note: for creating epochs with mne.epochs, tmin and tmax should be specified!)
@@ -122,12 +129,13 @@ def preprocessing(path, subjects, task, resampling_frq=None, ref_chs=None,
 
         # autoreject
         if autoreject == 'global':
-            reject = get_rejection_threshold(epochs, decim=2)
+            epochs.pick_types(eeg=True)  # TODO how to restore eog and ecg channels when saving data
+            reject = get_rejection_threshold(epochs)
             rejects[sub] = reject
             epochs.drop_bad(reject=reject)
             reject_log = np.array([
-                i for i in range(len(epochs.drop_log)) if epochs.drop_log[i] != ()
-                ])
+                    i for i in range(len(epochs.drop_log)) if epochs.drop_log[i] != ()
+                    ])
             np.save(f'data/rejectlog/{sub}-{task}.npy', reject_log)
 
         if autoreject == 'local':
