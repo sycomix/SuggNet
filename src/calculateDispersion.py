@@ -40,6 +40,7 @@ def dispersion_with_mean(ampVectors, normalization=True):
 
 def dispersion_report(ampVectors_collection,
                       pos,
+                      fname_report,
                       fname,
                       save=True,
                       normalization=True):
@@ -65,7 +66,7 @@ def dispersion_report(ampVectors_collection,
                  'DV after ICA and before Autoreject',
                  'DV after ICA and Autoreject'],
     )
-    report.save('dispersionVector_report.html', overwrite=True)
+    report.save(fname_report, overwrite=True)
 
     if save:
         np.save(fname, np.array(ampVectors_collection))
@@ -74,14 +75,11 @@ def dispersion_report(ampVectors_collection,
 def amplitude_vector(raw, ch_names, thisIsNotNumpy=True):
     # Calculate robust std from MAD
     if thisIsNotNumpy:
-        raw = raw.get_data()
+        raw_filt = raw.copy().filter(1, 20)
+        raw = raw_filt.get_data()
     ampVector = 1.4826 * median_abs_deviation(raw, 1)
     # delete ecg and eog channels as they are not of interest but will impact dispersion vector calculation
-    if thisIsNotNumpy:  # TODO This line can potentially become a source of confusion and should be changed!!
-        # for now, we know  that when raw is a np.array it's actually the output of epoched data
-        # that became continuous with a costum function after autoreject for which we had already
-        # picked only eeg channels. Other than that there is no relation between being a numpy array and this line!!
-        ampVector = np.delete(ampVector, [ch_names.index(i) for i in ['EOG1', 'EOG2', 'ECG']])
+    ampVector = np.delete(ampVector, [ch_names.index(i) for i in ['EOG1', 'EOG2', 'ECG']])
 
     return ampVector
 
@@ -93,6 +91,7 @@ def _visualize_dispersion(dispVector, pos):
     # remove position of EOG1 and EOG2 channels that are not included in the dispersion vector compitation
     ch_pos = np.delete(ch_pos, [pos.ch_names.index(i) for i in ['EOG1', 'EOG2']], 0)
 
-    ax = mne.viz.plot_topomap(dispVector, ch_pos)
+    im, _ = mne.viz.plot_topomap(dispVector, ch_pos, cmap='RdBu_r', show=False)
+    plt.colorbar(im)
 
-    return ax
+    return im
