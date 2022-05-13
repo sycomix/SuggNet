@@ -1,4 +1,6 @@
 data/
+!data/classification_dataset.csv
+
 .DS_Store
 *.pyc
 temp/
@@ -15,3 +17,4 @@ notebooks/bv2bids_ch5.ipynb
 notebooks/OldScripts.ipynb
 notebooks/24222_findBadCh.py
 notebooks/newDocsCreator.ipynb
+.ipynb_checkpoints/
