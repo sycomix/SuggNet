@@ -1,0 +1,22 @@
+name: otka_autokeras
+
+dependencies:
+  - python
+  - pip
+  - matplotlib
+  - seaborn
+  - pandas
+  - scikit-learn
+  - flake8
+  - ipykernel
+  - jupyter
+  - notebook
+  - openpyxl
+  - apple::tensorflow-deps
+  - pip:
+    # install using: pip install autokeras==1.0.19 --no-deps
+    # - autokeras==1.0.19
+    - tensorflow-macos
+    - tensorflow-metal
+    - protobuf==3.*
+    - git+https://github.com/keras-team/keras-tuner.git
