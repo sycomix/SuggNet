@@ -17,6 +17,8 @@ dependencies:
   - xarray
   - netcdf4
   - dask
+  - openpyxl
+  - shap
   - pip:
     - mne
     - mne-connectivity
@@ -24,3 +26,8 @@ dependencies:
     - mne-bids
     - pyvista
     - ipyvtklink
+    - umap
+    - scikit-optimize
+    - autokeras
+    - fooof
+    - neurodsp
