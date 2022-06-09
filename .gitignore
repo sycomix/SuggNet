@@ -1,4 +1,5 @@
 data/
+docs/
 !data/classification_dataset.csv
 
 .DS_Store
@@ -18,3 +19,4 @@ notebooks/OldScripts.ipynb
 notebooks/24222_findBadCh.py
 notebooks/newDocsCreator.ipynb
 .ipynb_checkpoints/
+outputs/
