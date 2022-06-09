@@ -9,7 +9,7 @@ import mne
 import numpy as np
 import pandas as pd
 import pickle
-import os.path as op  # TODO ask Morty about the Path
+import os.path as op
 from mne.time_frequency import psd_welch
 
 
@@ -22,7 +22,7 @@ def calculatePSD(path,
                  n_job=1):
 
     """
-    run spectral analysis using Welch’s method with a Hanning window of 4s with 50% overlap.
+    run spectral analysis using Welch’s method with a Hanning window of 1s with 50% overlap.
 
     Paremeters
     ----------
@@ -65,7 +65,10 @@ def calculatePSD(path,
                 temp1 = [psd_transformed[ch_nam.index(i)] for i in channels]  # sift psd of relevant channels out
                 # aggregate over different frequency bands
                 for k, v in freqs.items():
-                    temp2 = [temp1[i][v[0]:v[1]] for i in range(len(temp1))]
+                    temp2 = [temp1[i][v[0]:v[1]] for i in range(len(temp1))]  # TODO change this code: depending on the
+                    # parameters of psd_welch it would malfunction! I should use something like this:
+                    # temp2 = temp1[:, np.where((freqs[k][0] <= psd_freq) & (psd_freq <= freqs[k][1]) == True)[0]]
+                    # where psd freq is the frequency vector from psd_welch
                     temp3 = np.array(temp2)
                     psd_aggregated[f'{key}-{k}'] = temp3.mean(0).mean(0)
 
