@@ -31,3 +31,4 @@ dependencies:
     - autokeras
     - fooof
     - neurodsp
+    - frites
