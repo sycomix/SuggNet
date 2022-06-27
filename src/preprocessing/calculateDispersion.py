@@ -42,6 +42,10 @@ def dispersion_report(ampVectors_collection,
                       pos,
                       fname_report,
                       fname,
+                      caption=[
+                            'DV before ICA and Autoreject',
+                            'DV after ICA and before Autoreject',
+                            'DV after ICA and Autoreject'],
                       save=True,
                       normalization=True):
     """
@@ -62,9 +66,7 @@ def dispersion_report(ampVectors_collection,
     report.add_figure(
         fig=figs,
         title='topomap of Dispersion vectors',
-        caption=['DV before ICA and Autoreject',
-                 'DV after ICA and before Autoreject',
-                 'DV after ICA and Autoreject'],
+        caption=caption,
     )
     report.save(fname_report, overwrite=True)
 

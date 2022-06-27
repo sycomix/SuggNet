@@ -37,8 +37,10 @@ def xarray_creator(bids_root, subjects, tasks, dir, ids_map, realHyp=True, sfreq
     """
     if subjects == 'all':
         subjects = [f"{num:02d}" for num in range(1, 51)]  # TODO retrieve 51 from number of files in bids_root
+        # idea: get either subjects ranges (first, and last ids in an orde) or their ids,
+        # and with that we can create this list
 
-    _ds_creator(bids_root, subjects, tasks, ids_map, dir, realHyp)
+    _to_ds(bids_root, subjects, tasks, ids_map, dir, realHyp)
 
     # open and merge two dataset
     ds0 = xr.open_dataset('data/dataset/ds0.nc')
@@ -63,7 +65,7 @@ def xarray_creator(bids_root, subjects, tasks, dir, ids_map, realHyp=True, sfreq
     dataset.to_netcdf(f'{dir}/dataset.nc', engine="h5netcdf", encoding=encoding)
 
 
-def _ds_creator(bids_root, subjects, tasks, ids_map, dir, realHyp=True):
+def _to_ds(bids_root, subjects, tasks, ids_map, dir, realHyp=True):
     """
     open files and create a dictionary from them
 

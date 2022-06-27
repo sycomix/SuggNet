@@ -26,7 +26,7 @@ columns = []
 for i in range(len(data.columns.tolist())):
   if data.columns.tolist()[i][-1] == '1' and data.columns.tolist()[i][0:4] != 'time' and data.columns.tolist()[i][0:3] != 'tsz':
     columns.append(data.columns.tolist()[i])
-columns = [x.replace('_1','') for x in columns]
+columns = [x.replace('_1', '') for x in columns]
 
 df_ = pd.DataFrame(index=index, columns=columns)
 df_ = df_.fillna(0)

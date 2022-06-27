@@ -12,10 +12,9 @@ high_imp = {}
 for sub, bid in zip(subject_ids, bids):
     raw = read_raw_brainvision(f'data/Live Sessions/{sub}.vhdr', misc=['ECG'])
     ch_names = raw.ch_names
-    high_imp[bid] = [dict({ch_nam: raw.impedances[ch_nam]['imp']})
-                            for ch_nam in ch_names
-                            if raw.impedances[ch_nam]['imp'] >= 11]
+    high_imp[bid] = [dict({ch_nam: raw.impedances[ch_nam]['imp']}) for ch_nam in ch_names
+                     if raw.impedances[ch_nam]['imp'] <= 0]
 
 
 df = pd.DataFrame.from_dict(high_imp, orient='index')
-df.to_csv('docs/high_imp.csv')
+df.to_csv('docs/low_imp.csv')

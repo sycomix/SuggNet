@@ -25,7 +25,7 @@ total_ids_map.rename(columns={'Unnamed: 0':'eeg_ids'}, inplace=True)
 total_ids_map.set_index('eeg_ids', inplace=True, drop=True)
 
 # ---------------------- group1: data that are already analyzed in the first round
-chunck1 = pd.read_csv(op.join(docs_dir,'elig_par'))
+chunck1 = pd.read_csv(op.join(docs_dir, 'elig_par'))
 chunck1 = chunck1['0'].tolist()
 chunck1 = [i for i in chunck1 if i.isdigit()]
 # sessions that trigger has not worked normally (the last one does not have only Stimulus 2,
@@ -36,7 +36,7 @@ imp_trg = [2152714, 2160311, 215711, 2152014, 2160314, 21052511, 2131811, 213181
 #%%
 # ---------------------- group2: finding data that are not analyzed in chucnk1 + data that their marker description is not as it should but the durations between markers are correct.
 ## get the id of the participants who did not come to hypnotizability session
-bh_data = pd.read_excel(op.join(docs_dir,'data_with_hypnotizability.xlsx'), header=1)
+bh_data = pd.read_excel(op.join(docs_dir, 'data_with_hypnotizability.xlsx'), header=1)
 bh_data.set_index('index', inplace=True)
 ind_1 = bh_data[pd.isna(bh_data.hypnotizability_total)].index
 
@@ -64,12 +64,12 @@ markers_code = {'baseline_1':334.0,
 
 # Open data, find the relation between triggers, and save them in adocument
 for sub_id in imp_trg:
-    fname = op.join(eeg_dir,f'{sub_id}.vhdr')
+    fname = op.join(eeg_dir, f'{sub_id}.vhdr')
     raw = mne.io.read_raw_brainvision(fname)
     onsets = raw.annotations.onset
     diffs[sub_id] = np.diff(onsets).tolist()
 
-diffs_df = pd.DataFrame(dict([ (k,pd.Series(v)) for k,v in diffs.items() ]))
+diffs_df = pd.DataFrame(dict([(k, pd.Series(v)) for k, v in diffs.items()]))
 diffs_df = round(diffs_df)
 diffs_df
 
@@ -79,7 +79,7 @@ diffs_df
 # 1. duration of first baseline is ok
 inact_baselines = []
 for col in diffs_df.columns:
-    temp = diffs_df.loc[:,col].dropna().astype('int')
+    temp = diffs_df.loc[:, col].dropna().astype('int')
     checker = [True for i in temp if i == 334]
     if any(checker):
         inact_baselines.append(col)
