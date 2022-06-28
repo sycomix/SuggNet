@@ -23,10 +23,12 @@ def extract_features(subjects: np.ndarray,
                      kind: str,
                      frequency_band=None,
                      data_dir=Path('data/classification_datasets'),
+                     power_types='periodic',
                      **kwargs) -> np.ndarray:
     """Extract features from the given subjects.
 
     Args:
+    power_types: in ['periodic', 'nonperiodic' 'iaf', 'all'] effective only when kind is 'power source'.
     """
 
     subject_condition = pd.DataFrame(subjects).agg(''.join, axis=1).to_list()
@@ -40,8 +42,13 @@ def extract_features(subjects: np.ndarray,
         path = data_dir / 'power_source.csv'
         data = _query_csv(path, subject_condition)
         col_names = data.columns
-        if frequency_band != 'all':
+        # TODO: add statement when frequency_band is 'all' and power_types is 'periodic'
+        if frequency_band != 'all' and power_types == 'periodic':
             col_names = [col for col in data.columns if frequency_band in col]
+        elif power_types == 'nonperiodic':
+            col_names = [col for col in data.columns if 'exponent' in col or 'offset' in col]
+        elif power_types == 'iaf':
+            col_names = [col for col in data.columns if 'IAF' in col]
         return data.fillna(0)[col_names]
 
     elif kind.lower() == 'power sensor':
