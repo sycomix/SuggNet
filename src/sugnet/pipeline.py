@@ -2,6 +2,7 @@
 from pathlib import Path
 import pandas as pd
 import numpy as np
+from sklearn.base import TransformerMixin, BaseEstimator
 
 
 def _query_csv(path: Path,
@@ -19,12 +20,12 @@ def _query_csv(path: Path,
     return data.loc[valid_idx]
 
 
-def extract_features(subjects: np.ndarray,
-                     kind: str,
-                     frequency_band=None,
-                     data_dir=Path('data/classification_datasets'),
-                     power_types='periodic',
-                     **kwargs) -> np.ndarray:
+def _extract_features(subjects: np.ndarray,
+                      kind: str,
+                      frequency_band=None,
+                      power_types='periodic',
+                      data_dir=Path('data/classification_datasets'),
+                      **kwargs) -> np.ndarray:
     """Extract features from the given subjects.
 
     Args:
@@ -82,10 +83,40 @@ def extract_features(subjects: np.ndarray,
     raise ValueError(f'Unknown feature kind: {kind}')
 
 
+class FeatureExtractor(TransformerMixin, BaseEstimator):
+    def __init__(self,
+                 kind: str = 'power source',
+                 frequency_band='all',
+                 power_types='periodic',
+                 data_dir=Path('data/classification_datasets'),
+                 **kwargs):
+        self.kind = kind
+        self.frequency_band = frequency_band
+        self.power_types = power_types
+        self.data_dir = data_dir
+        self.kwargs = kwargs
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X, y=None):
+        self.X_ = _extract_features(X,
+                                    kind=self.kind,
+                                    frequency_band=self.frequency_band,
+                                    power_types=self.power_types,
+                                    data_dir=self.data_dir,
+                                    **self.kwargs)
+
+        return self.X_
+
+    def get_feature_names_out(self):
+        return self.X_.columns.to_list()
+
+
 if __name__ == '__main__':
     # test
-    extract_features(np.array([['01', 'whitenoise'],
+    _extract_features(np.array([['01', 'whitenoise'],
                                ['01', 'confusion'],
                                ['02', 'confusion'],
                                ['02', 'embedded']]),
-                     kind='correlation sensor')
+                      kind='correlation sensor')
