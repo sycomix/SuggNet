@@ -22,7 +22,7 @@ def _query_csv(path: Path,
 
 def _extract_features(subjects: np.ndarray,
                       kind: str,
-                      frequency_band=None,
+                      frequency_band: str,
                       power_types='periodic',
                       data_dir=Path('data/classification_datasets'),
                       **kwargs) -> np.ndarray:
@@ -86,7 +86,7 @@ def _extract_features(subjects: np.ndarray,
 class FeatureExtractor(TransformerMixin, BaseEstimator):
     def __init__(self,
                  kind: str = 'power source',
-                 frequency_band='all',
+                 frequency_band: str = 'all',
                  power_types='periodic',
                  data_dir=Path('data/classification_datasets'),
                  **kwargs):
@@ -109,8 +109,9 @@ class FeatureExtractor(TransformerMixin, BaseEstimator):
 
         return self.X_
 
-    def get_feature_names_out(self):
-        return self.X_.columns.to_list()
+    def get_feature_names_out(self,
+                              feature_names_in: np.ndarray) -> np.ndarray:
+        return self.X_.columns.values
 
 
 if __name__ == '__main__':
