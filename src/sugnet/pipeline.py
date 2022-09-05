@@ -79,6 +79,14 @@ def _extract_features(subjects: np.ndarray,
         if frequency_band != 'all':
             col_names = [col for col in data.columns if frequency_band in col]
         return data[col_names]
+    
+    elif kind.lower() == 'plv sensor':
+        path = data_dir / 'plv_sensor.csv'
+        data = _query_csv(path, subject_condition)
+        col_names = data.columns
+        if frequency_band != 'all':
+            col_names = [col for col in data.columns if frequency_band in col]
+        return data[col_names]
 
     raise ValueError(f'Unknown feature kind: {kind}')
 
