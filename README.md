@@ -1,4 +1,4 @@
-# Otka Classification
+# Verbal Suggestibility Classification
 
 
 ## Setup
