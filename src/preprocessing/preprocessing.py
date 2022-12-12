@@ -152,7 +152,7 @@ def preprocessing(path,
             # filter for calculating the ampvector
             # TODO epochs_filt = epochs.copy().filter(1, 20) this line gives and error because of the filter length
             # I should consider using a method to filter epoched data without changing the length.
-            continuous_data = _epochs_to_continuous(epochs)
+            continuous_data = np.hstack(epochs.get_data())
             ampVector = amplitude_vector(continuous_data, ch_names=ch_names, thisIsNotNumpy=False)
             # delete FCz to have the same position across ampVectors and then append
             ampVector = np.delete(ampVector, -1, 0)  # we know that FCz is the last item in the list
@@ -199,18 +199,6 @@ def preprocessing(path,
     # epoch to continuous (maybe I won't do this, depending on how I calculate psd, bacuase near the rejected epochs
     # I would see edge effects and if I retuen this to continuos data I cannot track them!)
     # use to_xarray to create xarray dataset
-
-
-def _epochs_to_continuous(epochs):
-    array = epochs.get_data()
-    shape = array.shape
-    init = np.zeros(shape[1:])
-    for i in range(shape[0]):
-        init = np.hstack((init, array[i]))
-
-    raw = np.delete(init, np.s_[:shape[2]], 1)
-
-    return raw
 
 
 def _make_montage(path='data/raw/plb-hyp-live2131111.vhdr'):
