@@ -19,6 +19,7 @@ dependencies:
   - dask
   - openpyxl
   - shap
+  - pip
   - pip:
     - mne
     - mne-connectivity
