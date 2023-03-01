@@ -20,6 +20,7 @@ dependencies:
   - openpyxl
   - shap
   - pip
+  - statsmodels
   - pip:
     - mne
     - mne-connectivity
@@ -33,3 +34,4 @@ dependencies:
     - fooof
     - neurodsp
     - frites
+    - "embetter[text]"
