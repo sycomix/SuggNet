@@ -1,6 +1,7 @@
 data/
 outputs/
 docs/
+models/
 
 .DS_Store
 *.pyc
