@@ -1,5 +1,9 @@
 name: otka
 
+channels:
+  - conda-forge
+  - default
+
 dependencies:
   - python=3.9
   - numpy
@@ -21,6 +25,7 @@ dependencies:
   - shap
   - pip
   - statsmodels
+  - imbalanced-learn
   - pip:
     - mne
     - mne-connectivity
