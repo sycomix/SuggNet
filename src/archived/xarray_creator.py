@@ -88,12 +88,14 @@ def _to_ds(bids_root, subjects, tasks, ids_map, dir, realHyp=True):
 
     # Running this script will become unnecessarily slow for sub>25
     # so if len(subject) > 25, we will create xarray in two batches and then merge:
-    ind = int(len(subjects)/3)
+    ind = len(subjects) // 3
     subjects_b1 = subjects[:ind]
     subjects_b2 = subjects[ind:2*ind]
     subjects_b3 = subjects[2*ind:]
     subjects_list = [subjects_b1, subjects_b2, subjects_b3]
 
+    # timpoints and initialize
+    timepoints = 300001  # change this if resampling data
     for i, batch in enumerate(subjects_list):
         subjects = batch
         tasks = ['baseline1', 'experience1']  # this is when RealHyp == True
@@ -101,8 +103,6 @@ def _to_ds(bids_root, subjects, tasks, ids_map, dir, realHyp=True):
 
         for task in tasks:
 
-            # timpoints and initialize
-            timepoints = 300001  # change this if resampling data
             allSubjects = np.empty((1, 61, timepoints))
 
             # Open data of a specific task for all subjects one by one, reshape and append them
@@ -206,8 +206,7 @@ def _cut_noisy(raw, task, language):
 
 # real hypnosis index finder
 def __task_ind_finder(ids_map, sub):
-    exp_ind = ids_map.loc[int(sub), 'true_hyp_ind']
-    return exp_ind
+    return ids_map.loc[int(sub), 'true_hyp_ind']
 
 
 # bad channel finder
@@ -215,5 +214,4 @@ def __bad_channel_matcher(ids_map, sub):
     """
     find the name of channels marked as bad for each
     """
-    bads = ids_map.loc[int(sub), 'bad_channels']
-    return bads
+    return ids_map.loc[int(sub), 'bad_channels']

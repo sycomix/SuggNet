@@ -227,9 +227,7 @@ def _make_montage(path='data/raw/plb-hyp-live2131111.vhdr'):
     # pos_array = np.delete(pos_array, -1, axis=0)
 
     pos_dict = dict(zip(ch_names, pos_array))
-    pos = mne.channels.make_dig_montage(pos_dict)
-
-    return pos
+    return mne.channels.make_dig_montage(pos_dict)
 
 
 def plot_psd_topomap_raw(raw, bands=None):

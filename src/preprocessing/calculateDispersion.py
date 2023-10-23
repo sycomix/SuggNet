@@ -33,9 +33,7 @@ def dispersion_with_mean(ampVectors, normalization=True):
         mean_recording = amplitude_matrix.mean(0)
         amplitude_matrix = np.divide(amplitude_matrix, mean_recording)
     stdFromMad = 1.4826 * median_abs_deviation(amplitude_matrix, 1)
-    dispersion = stdFromMad / np.median(amplitude_matrix)
-
-    return dispersion
+    return stdFromMad / np.median(amplitude_matrix)
 
 
 def dispersion_report(ampVectors_collection,

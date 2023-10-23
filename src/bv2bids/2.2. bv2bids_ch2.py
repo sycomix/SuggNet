@@ -30,13 +30,15 @@ iterators = range(10)
 runs = [0, 2, 3, 6, 7, 10, 11, 14, 15, 18]
 run_map = dict(zip(iterators, runs))
 
-raw_list = list()
-bids_list = list()
-bads = list()
+raw_list = []
+bids_list = []
+bads = []
 new_annot = dict(onset = [], duration = [], description  = [])
 
+#save 
+dir = '/Users/yeganeh/Documents/Raw Files/PLB_HYP_OTKA'
 for subject_id in subject_ids:
-    fname = op.join(data_dir,'{}.vhdr'.format(subject_id))
+    fname = op.join(data_dir, f'{subject_id}.vhdr')
     raw = mne.io.read_raw_brainvision(fname, eog=('EOG1', 'EOG2'), misc= ['ECG'])
     raw.set_channel_types({'ECG':'ecg'})
     raw.info['line_freq'] = 50  # specify power line frequency
@@ -65,11 +67,9 @@ for subject_id in subject_ids:
         new_annot = mne.Annotations(onset=[0],
                                 duration=[onset[1]-onset[0]],
                                 description=[description])
-            
+
         raw_segment.set_annotations(new_annot)
-        
-        #save 
-        dir = '/Users/yeganeh/Documents/Raw Files/PLB_HYP_OTKA'
+
         fname_new = op.join(dir, f'fif_files/{subject_id}-{description}-raw.fif')
         raw_segment.save(fname_new)
         raw_segment = mne.io.read_raw_fif(fname_new)
@@ -82,7 +82,7 @@ for subject_id in subject_ids:
                             # run=f'{iterator+1}',
                             root=bids_root)
         bids_list.append(bids_path)
-        
+
 
 #create bids from lists
 for raw, bids_path in zip(raw_list, bids_list):

@@ -28,27 +28,27 @@ def calculate_connectivity(path,
             dir = op.join(path, epo_name)
             # open clean epochs
             epochs = mne.read_epochs(dir)
-            
+
             # pick eeg channels
             epochs = epochs.pick_types(eeg=True)
-            
+
             # insert FCz position
             pos = insert_fcz_pos(epochs)
             epochs.set_montage(pos)
-            
+
             # apply surface Laplacian 
             if laplacian:
                 epochs_csd = compute_current_source_density(epochs)
                 epochs = epochs_csd
                 del epochs_csd
-                
+
             # calculate connectivity
             sfreq = epochs.info['sfreq']
             con = spectral_connectivity(
                 epochs, method=method, sfreq=sfreq, fmin=fmin,
                 fmax=fmax, faverage=True, mt_adaptive=True, n_jobs=n_jobs, verbose=0)
-            
-            con_dict[n_sub+'_'+task] = con
+
+            con_dict[f'{n_sub}_{task}'] = con
 
 
 def insert_fcz_pos(epochs):
@@ -57,15 +57,13 @@ def insert_fcz_pos(epochs):
     (Their positions are the same, only y-axis value is different)
     '''
     import copy
-    ch_names = copy.deepcopy(epochs.info['ch_names']) 
+    ch_names = copy.deepcopy(epochs.info['ch_names'])
     [ch_names.remove(i) for i in ['ECG', 'EOG1', 'EOG2']]
     pos_array = epochs._get_channel_positions()
-    
+
     pos_fcz = pos_array[ch_names.index('CPz')] * np.array([1, -1, 1])
     pos_array = np.insert(pos_array, 58, pos_fcz, axis=0)
     pos_array = np.delete(pos_array, -1, axis=0)
-    
+
     pos_dict = dict(zip(ch_names, pos_array))
-    pos = mne.channels.make_dig_montage(pos_dict)
-    
-    return pos
+    return mne.channels.make_dig_montage(pos_dict)

@@ -36,9 +36,7 @@ def _extract_features(subjects: np.ndarray,
 
     if kind.lower() == 'chance':
         n_features = kwargs.get('n_features', 4)
-        X = np.random.rand((len(subjects), n_features))
-        return X
-
+        return np.random.rand((len(subjects), n_features))
     elif kind.lower() == 'power source':
         path = data_dir / 'power_source.csv'
         data = _query_csv(path, subject_condition)

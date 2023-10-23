@@ -62,93 +62,91 @@ data_dir = '/Users/yeganeh/Codes/otka-preprocessing/data/Main-study/derivatives/
 tasks = ['baseline1', 'baseline2',
          'induction1', 'induction2', 'induction3', 'induction4',
          'experience1', 'experience2', 'experience3', 'experience4']
-          
+
 n_ses = '01'
 n_jobs = 8
 for n_sub in subjects:
-  for task in tasks:
-    epoch_name = f'sub-{n_sub}_ses-{n_ses}_task-{task}_proc-clean_epo.fif'
-    dir = op.join(data_dir, f'sub-{n_sub}/ses-{n_ses}/eeg/{epoch_name}')
-    epoch = mne.read_epochs(dir)
-    
-    ## creat empty lists of brain areas
-    ba_list = {}
-    for j in ['L','R','Z']:
-      for i in ['F','C','P','O']:
-        ba_list[i+j] = []
+    for task in tasks:
+        epoch_name = f'sub-{n_sub}_ses-{n_ses}_task-{task}_proc-clean_epo.fif'
+        dir = op.join(data_dir, f'sub-{n_sub}/ses-{n_ses}/eeg/{epoch_name}')
+        epoch = mne.read_epochs(dir)
 
-    ### chategorize EEG channels according to their name
-    for i in range(len(epoch.ch_names)):
-      ch_nam = epoch.ch_names[i]
-      temp = ch_nam.lower()
-      if temp[-1].isnumeric():
-        if int(temp[-1]) % 2 == 0:
-          if 'f' in temp and 'c' not in temp:
-            ba_list['FR'].append(ch_nam)
-          elif 'c' in temp and 'p' not in temp:
-            ba_list['CR'].append(ch_nam)
-          elif 'p' in temp and 'o' not in temp:
-            ba_list['PR'].append(ch_nam)
-          elif 'o' in temp:
-            ba_list['OR'].append(ch_nam)
-        else:
-          if 'f' in temp and 'c' not in temp:
-            ba_list['FL'].append(ch_nam)
-          elif 'c' in temp and 'p' not in temp:
-            ba_list['CL'].append(ch_nam)
-          elif 'p' in temp and 'o' not in temp:
-            ba_list['PL'].append(ch_nam)
-          elif 'o' in temp:
-            ba_list['OL'].append(ch_nam)
-      else:
-          if 'f' in temp and 'c' not in temp:
-            ba_list['FZ'].append(ch_nam)
-          elif 'c' in temp and 'p' not in temp:
-            ba_list['CZ'].append(ch_nam)
-          elif 'p' in temp and 'o' not in temp:
-            ba_list['PZ'].append(ch_nam)
-          elif 'o' in temp:
-            ba_list['OZ'].append(ch_nam)
+        ## creat empty lists of brain areas
+        ba_list = {}
+        for j in ['L','R','Z']:
+          for i in ['F','C','P','O']:
+            ba_list[i+j] = []
 
-    ba_list['all'] = 'all'
+            ### chategorize EEG channels according to their name
+        for i in range(len(epoch.ch_names)):
+            ch_nam = epoch.ch_names[i]
+            temp = ch_nam.lower()
+            if temp[-1].isnumeric():
+                if int(temp[-1]) % 2 == 0:
+                    if 'f' in temp and 'c' not in temp:
+                      ba_list['FR'].append(ch_nam)
+                    elif 'c' in temp and 'p' not in temp:
+                      ba_list['CR'].append(ch_nam)
+                    elif 'p' in temp and 'o' not in temp:
+                      ba_list['PR'].append(ch_nam)
+                    elif 'o' in temp:
+                      ba_list['OR'].append(ch_nam)
+                elif 'f' in temp and 'c' not in temp:
+                    ba_list['FL'].append(ch_nam)
+                elif 'c' in temp and 'p' not in temp:
+                  ba_list['CL'].append(ch_nam)
+                elif 'p' in temp and 'o' not in temp:
+                  ba_list['PL'].append(ch_nam)
+                elif 'o' in temp:
+                  ba_list['OL'].append(ch_nam)
+            elif 'f' in temp and 'c' not in temp:
+                ba_list['FZ'].append(ch_nam)
+            elif 'c' in temp and 'p' not in temp:
+              ba_list['CZ'].append(ch_nam)
+            elif 'p' in temp and 'o' not in temp:
+              ba_list['PZ'].append(ch_nam)
+            elif 'o' in temp:
+              ba_list['OZ'].append(ch_nam)
 
-    psd_dict = {}
-    for i in ba_list:
-      for j in freq_bands:
-        psd_dict[n_sub+'-'+task+'-'+i+'-'+j] = []
+        ba_list['all'] = 'all'
 
-    freq_dict = {}
-    for i in ba_list:
-      for j in freq_bands:
-        freq_dict[n_sub+'-'+task+'-'+i+'-'+j] = []
+        psd_dict = {}
+        for i in ba_list:
+          for j in freq_bands:
+            psd_dict[n_sub+'-'+task+'-'+i+'-'+j] = []
 
-    print(f'Processing task {task} for subject-{n_sub}...')
-    # calculate power for each frequency band within each brain region
-    for i, key1 in enumerate(ba_list):
-        for key2 in freq_bands:
-            kwargs = dict(picks=ba_list[key1],
-                        fmin=freq_bands[key2][0],
-                        fmax=freq_bands[key2][1], n_jobs=n_jobs)
-            psds, freq = psd_multitaper(epoch, **kwargs)
-            psd_dict[n_sub+'-'+task+'-'+key1+'-'+key2].append(psds)
-            freq_dict[n_sub+'-'+task+'-'+key1+'-'+key2].append(freq)
+        freq_dict = {}
+        for i in ba_list:
+          for j in freq_bands:
+            freq_dict[n_sub+'-'+task+'-'+i+'-'+j] = []
 
-    print('FINISH!')
+        print(f'Processing task {task} for subject-{n_sub}...')
+            # calculate power for each frequency band within each brain region
+        for key1 in ba_list:
+            for key2 in freq_bands:
+                kwargs = dict(picks=ba_list[key1],
+                            fmin=freq_bands[key2][0],
+                            fmax=freq_bands[key2][1], n_jobs=n_jobs)
+                psds, freq = psd_multitaper(epoch, **kwargs)
+                psd_dict[n_sub+'-'+task+'-'+key1+'-'+key2].append(psds)
+                freq_dict[n_sub+'-'+task+'-'+key1+'-'+key2].append(freq)
 
-    psd_total_unaggregated = psd_total_unaggregated | psd_dict
-    freq_total_unaggregated = freq_total_unaggregated | freq_dict
+        print('FINISH!')
 
-    
-    psd_dict = {rename_key(k):v for k,v in psd_dict.items()}
+        psd_total_unaggregated = psd_total_unaggregated | psd_dict
+        freq_total_unaggregated = freq_total_unaggregated | freq_dict
 
-    psd_dict_mean = {}
-    for key in psd_dict.keys():
-        psd_transformed = 10. * np.log10(psd_dict[key][0])
-        psd_dict_mean[key] = psd_transformed.mean(0).mean(0).mean(0)
 
-    psd_df = pd.DataFrame(psd_dict_mean, index=[f'sub-{n_sub}_{task}',])
-    psd_total = psd_total.append(psd_df)
-    # psd_df.reset_index(inplace=True)
+        psd_dict = {rename_key(k):v for k,v in psd_dict.items()}
+
+        psd_dict_mean = {}
+        for key in psd_dict:
+            psd_transformed = 10. * np.log10(psd_dict[key][0])
+            psd_dict_mean[key] = psd_transformed.mean(0).mean(0).mean(0)
+
+        psd_df = pd.DataFrame(psd_dict_mean, index=[f'sub-{n_sub}_{task}',])
+        psd_total = psd_total.append(psd_df)
+        # psd_df.reset_index(inplace=True)
 
 
 
@@ -157,14 +155,10 @@ dir = '/Users/yeganeh/Codes/otka-preprocessing/doc'
 fname = op.join(dir, 'psd_total.csv')
 psd_total.to_csv(fname)
 
-# save unaggregated data
-a_file = open("psd_total_unaggregated.pkl", "wb")
-pickle.dump(psd_total_unaggregated, a_file)
-a_file.close()
-
-a_file = open("freq_total_unaggregated.pkl", "wb")
-pickle.dump(freq_total_unaggregated, a_file)
-a_file.close()
+with open("psd_total_unaggregated.pkl", "wb") as a_file:
+    pickle.dump(psd_total_unaggregated, a_file)
+with open("freq_total_unaggregated.pkl", "wb") as a_file:
+    pickle.dump(freq_total_unaggregated, a_file)
 
   # columns = []
   # col = psd_df.columns.tolist()

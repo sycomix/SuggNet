@@ -32,9 +32,7 @@ def run_ica(raw,
         ica.fit(raw_filt)
 
     # create list of icas
-    icas_eog = [eog_ica]
-    icas_eog.append(ica)
-
+    icas_eog = [eog_ica, ica]
     # detect eog components
     eog_epochs = mne.preprocessing.create_eog_epochs(raw=raw)  # noqa
     _, eog_scores = ica.find_bads_eog(raw, ch_name=['EOG1', 'EOG2', 'Fpz'])
@@ -46,11 +44,7 @@ def run_ica(raw,
     eog_inds.append(7)  # use components 7 from 3rd_ica as a template:
     corrmap(icas_eog, template=(2, eog_inds[2]), threshold=0.85, label='oculomotor', plot=show_plot)
 
-    if 'blink' in ica.labels_.keys():
-        eog_comps = ica.labels_['blink']
-    else:
-        eog_comps = []
-
+    eog_comps = ica.labels_['blink'] if 'blink' in ica.labels_.keys() else []
     ica.exclude = eog_comps
     print(f'EOG COMPONENTS: {ica.labels_}')
 

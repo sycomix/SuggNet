@@ -37,12 +37,14 @@ iterators = range(10)
 runs = [0, 2, 3, 6, 7, 10, 11, 14, 15, 18]
 run_map = dict(zip(iterators, runs))
 
-raw_list = list()
-bids_list = list()
+raw_list = []
+bids_list = []
 
+#save 
+dir = '/Users/yeganeh/Documents/Raw Files/PLB_HYP_OTKA'
 #%%
 for subject_id in subject_ids:
-    fname = op.join(data_dir,'{}.vhdr'.format(subject_id))
+    fname = op.join(data_dir, f'{subject_id}.vhdr')
     raw = mne.io.read_raw_brainvision(fname, eog=('EOG1', 'EOG2'), misc= ['ECG'])
     raw.set_channel_types({'ECG':'ecg'})
     raw.info['line_freq'] = 50  # specify power line frequency
@@ -55,7 +57,7 @@ for subject_id in subject_ids:
     bhdata = pd.read_csv(f'{bh_dir}/subject-{sub_ids_map[subject_id]}.csv')
     bh_trg1 = dateutil.parser.parse(bhdata.loc[0,'timestamp_trigger_1'])
     bh_baseline_d = dateutil.parser.parse(bhdata.loc[2,'timestamp_baseline_start']) - bh_trg1 #duration between trigger 1 and start of the baseline.
-    bh_baseline_d = bh_baseline_d.total_seconds() 
+    bh_baseline_d = bh_baseline_d.total_seconds()
     # this duration should be added to the onset of trigger 1 in the eeg trigger onsets
     index = list(desc).index('Stimulus/S  1')
     eeg_trg1 = onset[index]
@@ -92,11 +94,9 @@ for subject_id in subject_ids:
         new_annot = mne.Annotations(onset=[0],
                                 duration=[onset[1]-onset[0]],
                                 description=[description])
-            
+
         raw_segment.set_annotations(new_annot)
-        
-        #save 
-        dir = '/Users/yeganeh/Documents/Raw Files/PLB_HYP_OTKA'
+
         fname_new = op.join(dir, f'fif_files/{subject_id}-{description}-raw.fif')
         raw_segment.save(fname_new)
         raw_segment = mne.io.read_raw_fif(fname_new)
@@ -109,7 +109,7 @@ for subject_id in subject_ids:
                             # run=f'{iterator+1}',
                             root=bids_root)
         bids_list.append(bids_path)
-        
+
 
 #create bids from lists
 for raw, bids_path in zip(raw_list, bids_list):

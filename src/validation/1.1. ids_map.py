@@ -48,16 +48,10 @@ ids_map = pd.concat([eeg_ids_edited,bh_ind_dates], axis=1)
 # relate them to bids' ids
 # open bids id_map
 fname = op.join(docs_dir, 'bids_eeg_ids_map')
-a_file = open(fname, "rb")
-bids_id_map = pickle.load(a_file)
-a_file.close()
-
-# create a series of bids_ids_map and concat that to the main dataframe
-bids_ids = {}
+with open(fname, "rb") as a_file:
+    bids_id_map = pickle.load(a_file)
 keys = ids_map.ids.tolist() #ids of all the eeg files
-for key in keys:
-    bids_ids[key] = []
-
+bids_ids = {key: [] for key in keys}
 keys = [int(i) for i in bids_id_map.keys()]
 for key in keys:
     bids_ids[key] = bids_id_map[str(key)]

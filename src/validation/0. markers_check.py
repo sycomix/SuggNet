@@ -30,7 +30,7 @@ chunck1 = chunck1['0'].tolist()
 chunck1 = [i for i in chunck1 if i.isdigit()]
 # sessions that trigger has not worked normally (the last one does not have only Stimulus 2,
 # the forth only contains the triggers for the first trial)
-imp_trg = [2152714, 2160311, 215711, 2152014, 2160314, 21052511, 2131811, 2131814] 
+imp_trg = [2152714, 2160311, 215711, 2152014, 2160314, 21052511, 2131811, 2131814]
 [chunck1.remove(str(i)) for i in imp_trg]
 
 #%%
@@ -42,9 +42,7 @@ ind_1 = bh_data[pd.isna(bh_data.hypnotizability_total)].index
 
 # finding the corresponding eeg ids of the above behavioral ids
 group2 = [total_ids_map.index[total_ids_map['index'] == i].tolist()[0] for i in ind_1]
-group2.append('plb-hyp-live2131111')
-group2.append('plb-hyp-live21031114')
-
+group2.extend(('plb-hyp-live2131111', 'plb-hyp-live21031114'))
 # impaired triggers in group2
 imp_trg2 = [2151211, 2151114, 21051811, 21052814, 21060111, 216811]
 
@@ -52,10 +50,7 @@ imp_trg2 = [2151211, 2151114, 21051811, 21052814, 21060111, 216811]
 # inspect the distance between triggers
 [imp_trg.append(i) for i in imp_trg2]
 
-diffs = {}
-for key in imp_trg:
-    diffs[key] = []
-
+diffs = {key: [] for key in imp_trg}
 markers_code = {'baseline_1':334.0,
 'intro_1':108.0, 'intro_2':103.0,
  'induction_1':337.0, 'induction_2':336.0, 'induction_3':331.0, 'induction_4':363.0,

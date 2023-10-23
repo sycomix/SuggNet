@@ -3,7 +3,7 @@
 import os.path as op
 import pandas as pd
 import numpy as np
-from pandas.io import feather_format 
+from pandas.io import feather_format
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 import eli5
@@ -22,10 +22,11 @@ data.set_index('index', inplace=True)
 # initiate an empty dataframe
 a = data.index
 index = [x for pair in zip(a,a,a,a) for x in pair]
-columns = []
-for i in range(len(data.columns.tolist())):
-  if data.columns.tolist()[i][-1] == '1' and data.columns.tolist()[i][0:4] != 'time' and data.columns.tolist()[i][0:3] != 'tsz':
-    columns.append(data.columns.tolist()[i])
+columns = [
+    data.columns.tolist()[i] for i in range(len(data.columns.tolist()))
+    if data.columns.tolist()[i][-1] == '1' and data.columns.tolist()[i][:4] !=
+    'time' and data.columns.tolist()[i][:3] != 'tsz'
+]
 columns = [x.replace('_1', '') for x in columns]
 
 df_ = pd.DataFrame(index=index, columns=columns)
@@ -35,10 +36,10 @@ df_ = df_.fillna(0)
 temp = []
 sub_ids = data.index.tolist()
 for i in sub_ids:
-  for j in range(len(columns)):
+  for column_ in columns:
     for z in range(1,5):
-      temp.append(data.loc[i,f'{columns[j]}_{z}'])
-    df_.loc[i,columns[j]] = temp
+      temp.append(data.loc[i, f'{column_}_{z}'])
+    df_.loc[i, column_] = temp
     temp = []
 
 # add other variables to this new dataset
@@ -71,13 +72,11 @@ for column in psd_df.columns:
 # initiate a df with desired shape
 columns = []
 for task in ['induction', 'experience']:
-    for item in df_new.columns:
-        columns.append(item+'-'+task)
-
+  columns.extend(item+'-'+task for item in df_new.columns)
 index = []
 for item in df_new.index:
-    for trial in ['trial1', 'trial2', 'trial3', 'trial4']:
-        index.append(item[:6]+'-'+trial)
+  index.extend(item[:6] + '-' + trial
+               for trial in ['trial1', 'trial2', 'trial3', 'trial4'])
 index = list(dict.fromkeys(index))
 
 df_0 = pd.DataFrame(index=index, columns=columns)
@@ -90,9 +89,8 @@ for ind in df_new.index:
             df_0.loc[ind[:6]+'-'+'trial'+ind[-1], column+'-'+ind[7:-1]] = df_new.loc[ind, column]
 #%%
 import pickle
-a_file = open("ids_map_4fi.pkl", "rb")
-ids_map = pickle.load(a_file)
-a_file.close()
+with open("ids_map_4fi.pkl", "rb") as a_file:
+  ids_map = pickle.load(a_file)
 ids_map.pop('214611')
 #%%
 a = list(ids_map.keys())

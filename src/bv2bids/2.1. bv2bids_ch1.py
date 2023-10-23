@@ -20,9 +20,9 @@ iterators = range(10)
 runs = [0, 3, 4, 7, 8, 11, 12, 15, 16, 18]
 run_map = dict(zip(iterators, runs))
 
-raw_list = list()
-bids_list = list()
-bads = list()
+raw_list = []
+bids_list = []
+bads = []
 new_annot = dict(onset=[],
                  duration=[],
                  description=[])

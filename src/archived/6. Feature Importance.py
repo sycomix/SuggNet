@@ -71,10 +71,12 @@ class RandomHiddenLayerSizes(scipy.stats.rv_discrete):
     self.max_nodes_per_layer = max(1, max_nodes_per_layer)
 
   def rvs(self, *args, **kwargs):
-    n_sizes = tuple(np.random.randint(self.min_nodes_per_layer,
-                                      self.max_nodes_per_layer,
-                                      size=np.random.randint(self.min_layers, self.max_layers)))
-    return n_sizes
+    return tuple(
+        np.random.randint(
+            self.min_nodes_per_layer,
+            self.max_nodes_per_layer,
+            size=np.random.randint(self.min_layers, self.max_layers),
+        ))
 
 
 # ------------------------
